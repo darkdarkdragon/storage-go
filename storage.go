@@ -70,11 +70,11 @@ func (c *Client) UploadOrUpdateFile(bucketId string, relativePath string, data i
 }
 
 func (c *Client) UpdateFile(bucketId string, relativePath string, data io.Reader) FileUploadResponse {
-	return c.UploadOrUpdateFile(bucketId, relativePath, data, true, "")
+	return c.UploadOrUpdateFile(bucketId, relativePath, data, true, "", 0)
 }
 
 func (c *Client) UploadFile(bucketId string, relativePath string, data io.Reader) FileUploadResponse {
-	return c.UploadOrUpdateFile(bucketId, relativePath, data, false, "")
+	return c.UploadOrUpdateFile(bucketId, relativePath, data, false, "", 0)
 }
 
 func (c *Client) MoveFile(bucketId string, sourceKey string, destinationKey string) FileUploadResponse {
