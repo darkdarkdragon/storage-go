@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -21,7 +22,9 @@ const (
 	defaultSortOrder        = "asc"
 )
 
-func (c *Client) UploadOrUpdateFile(bucketId string, relativePath string, data io.Reader, update bool, contentType string) FileUploadResponse {
+func (c *Client) UploadOrUpdateFile(bucketId string, relativePath string, data io.Reader, update bool,
+	contentType string, cacheControlMaxAge int) FileUploadResponse {
+
 	if contentType == "" {
 		contentType = defaultFileContentType
 	}
@@ -36,21 +39,23 @@ func (c *Client) UploadOrUpdateFile(bucketId string, relativePath string, data i
 		err error
 	)
 
+	var request *http.Request
+	var method string
 	if update {
-		// c.clientTransport.header.Set("content-type", contentType)
-		var request *http.Request
-		request, err = http.NewRequest(http.MethodPut, c.clientTransport.baseUrl.String()+"/object/"+_path, body)
-		if err != nil {
-			panic(err)
-		}
-		request.Header.Set("Content-Type", contentType)
-		res, err = c.session.Do(request)
+		method = http.MethodPut
 	} else {
-		res, err = c.session.Post(
-			c.clientTransport.baseUrl.String()+"/object/"+_path,
-			contentType,
-			body)
+		method = http.MethodPost
 	}
+	request, err = http.NewRequest(method, c.clientTransport.baseUrl.String()+"/object/"+_path, body)
+	if err != nil {
+		panic(err)
+	}
+	request.Header.Set("Content-Type", contentType)
+	if cacheControlMaxAge > 0 {
+		request.Header.Set("cache-control", fmt.Sprintf("max-age=%d", cacheControlMaxAge))
+	}
+	res, err = c.session.Do(request)
+
 	if err != nil {
 		panic(err)
 	}
