@@ -28,7 +28,9 @@ func (c *Client) UploadOrUpdateFile(bucketId string, relativePath string, data i
 	if contentType == "" {
 		contentType = defaultFileContentType
 	}
-	c.clientTransport.header.Set("cache-control", defaultFileCacheControl)
+	if cacheControlMaxAge <= 0 {
+		c.clientTransport.header.Set("cache-control", defaultFileCacheControl)
+	}
 	c.clientTransport.header.Set("x-upsert", strconv.FormatBool(defaultFileUpsert))
 
 	body := bufio.NewReader(data)
