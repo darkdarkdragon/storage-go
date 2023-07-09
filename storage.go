@@ -21,9 +21,11 @@ const (
 	defaultSortOrder        = "asc"
 )
 
-func (c *Client) UploadOrUpdateFile(bucketId string, relativePath string, data io.Reader, update bool) FileUploadResponse {
+func (c *Client) UploadOrUpdateFile(bucketId string, relativePath string, data io.Reader, update bool, contentType string) FileUploadResponse {
+	if contentType == "" {
+		contentType = defaultFileContentType
+	}
 	c.clientTransport.header.Set("cache-control", defaultFileCacheControl)
-	c.clientTransport.header.Set("content-type", defaultFileContentType)
 	c.clientTransport.header.Set("x-upsert", strconv.FormatBool(defaultFileUpsert))
 
 	body := bufio.NewReader(data)
@@ -35,13 +37,18 @@ func (c *Client) UploadOrUpdateFile(bucketId string, relativePath string, data i
 	)
 
 	if update {
+		// c.clientTransport.header.Set("content-type", contentType)
 		var request *http.Request
 		request, err = http.NewRequest(http.MethodPut, c.clientTransport.baseUrl.String()+"/object/"+_path, body)
+		if err != nil {
+			panic(err)
+		}
+		request.Header.Set("Content-Type", contentType)
 		res, err = c.session.Do(request)
 	} else {
 		res, err = c.session.Post(
 			c.clientTransport.baseUrl.String()+"/object/"+_path,
-			defaultFileContentType,
+			contentType,
 			body)
 	}
 	if err != nil {
@@ -56,11 +63,11 @@ func (c *Client) UploadOrUpdateFile(bucketId string, relativePath string, data i
 }
 
 func (c *Client) UpdateFile(bucketId string, relativePath string, data io.Reader) FileUploadResponse {
-	return c.UploadOrUpdateFile(bucketId, relativePath, data, true)
+	return c.UploadOrUpdateFile(bucketId, relativePath, data, true, "")
 }
 
 func (c *Client) UploadFile(bucketId string, relativePath string, data io.Reader) FileUploadResponse {
-	return c.UploadOrUpdateFile(bucketId, relativePath, data, false)
+	return c.UploadOrUpdateFile(bucketId, relativePath, data, false, "")
 }
 
 func (c *Client) MoveFile(bucketId string, sourceKey string, destinationKey string) FileUploadResponse {

@@ -50,7 +50,7 @@ func NewClient(rawUrl string, token string, headers map[string]string) *Client {
 
 	// Set required headers
 	c.clientTransport.header.Set("Accept", "application/json")
-	c.clientTransport.header.Set("Content-Type", "application/json")
+	// c.clientTransport.header.Set("Content-Type", "application/json")
 	c.clientTransport.header.Set("X-Client-Info", "storage-go/"+version)
 	c.clientTransport.header.Set("Authorization", "Bearer "+token)
 
