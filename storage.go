@@ -31,7 +31,7 @@ func (c *Client) UploadOrUpdateFile(bucketId string, relativePath string, data i
 	if cacheControlMaxAge <= 0 {
 		c.clientTransport.header.Set("cache-control", defaultFileCacheControl)
 	}
-	c.clientTransport.header.Set("x-upsert", strconv.FormatBool(upsert))
+	// c.clientTransport.header.Set("x-upsert", strconv.FormatBool(upsert))
 
 	body := bufio.NewReader(data)
 	_path := removeEmptyFolderName(bucketId + "/" + relativePath)
@@ -47,6 +47,7 @@ func (c *Client) UploadOrUpdateFile(bucketId string, relativePath string, data i
 		method = http.MethodPut
 	} else {
 		method = http.MethodPost
+		request.Header.Set("x-upsert", strconv.FormatBool(upsert))
 	}
 	request, err = http.NewRequest(method, c.clientTransport.baseUrl.String()+"/object/"+_path, body)
 	if err != nil {
