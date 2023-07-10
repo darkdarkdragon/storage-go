@@ -47,11 +47,13 @@ func (c *Client) UploadOrUpdateFile(bucketId string, relativePath string, data i
 		method = http.MethodPut
 	} else {
 		method = http.MethodPost
-		request.Header.Set("x-upsert", strconv.FormatBool(upsert))
 	}
 	request, err = http.NewRequest(method, c.clientTransport.baseUrl.String()+"/object/"+_path, body)
 	if err != nil {
 		panic(err)
+	}
+	if !update {
+		request.Header.Set("x-upsert", strconv.FormatBool(upsert))
 	}
 	request.Header.Set("Content-Type", contentType)
 	if cacheControlMaxAge > 0 {
