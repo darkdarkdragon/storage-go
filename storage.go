@@ -23,7 +23,7 @@ const (
 )
 
 func (c *Client) UploadOrUpdateFile(bucketId string, relativePath string, data io.Reader, update, upsert bool,
-	contentType string, cacheControlMaxAge int) FileUploadResponse {
+	contentType string, cacheControlMaxAge int) (*FileUploadResponse, error) {
 
 	if contentType == "" {
 		contentType = defaultFileContentType
@@ -50,7 +50,7 @@ func (c *Client) UploadOrUpdateFile(bucketId string, relativePath string, data i
 	}
 	request, err = http.NewRequest(method, c.clientTransport.baseUrl.String()+"/object/"+_path, body)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	if !update {
 		request.Header.Set("x-upsert", strconv.FormatBool(upsert))
@@ -62,21 +62,27 @@ func (c *Client) UploadOrUpdateFile(bucketId string, relativePath string, data i
 	res, err = c.session.Do(request)
 
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	body_, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
+	}
 	var response FileUploadResponse
 	err = json.Unmarshal(body_, &response)
+	if err != nil {
+		return nil, err
+	}
 
-	return response
+	return &response, nil
 }
 
-func (c *Client) UpdateFile(bucketId string, relativePath string, data io.Reader) FileUploadResponse {
-	return c.UploadOrUpdateFile(bucketId, relativePath, data, true, true, "", 0)
+func (c *Client) UpdateFile(bucketId string, relativePath string, data io.Reader) (*FileUploadResponse, error) {
+	return c.UploadOrUpdateFile(bucketId, relativePath, data, true, false, "", 0)
 }
 
-func (c *Client) UploadFile(bucketId string, relativePath string, data io.Reader) FileUploadResponse {
+func (c *Client) UploadFile(bucketId string, relativePath string, data io.Reader) (*FileUploadResponse, error) {
 	return c.UploadOrUpdateFile(bucketId, relativePath, data, false, false, "", 0)
 }
 
